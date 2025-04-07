@@ -182,7 +182,11 @@ jobs:
         run: |
           TESTS_PATH=$GITHUB_WORKSPACE/.github/actions/test-install-components/
           if [ -z "${{ env.PACKAGE_NAME }}" ]; then echo "No package found matching the pattern!"; exit 1; fi
-          sudo docker run -v $TESTS_PATH/:/tests -v /tmp/:/packages -v /var/ossec:/var/ossec --entrypoint '/tests/install_component.sh' $CONTAINER_NAME:${{ env.TAG }} $PACKAGE_NAME manager
+          
+          CONTAINER_ID=$(sudo docker run -d -v $TESTS_PATH/:/tests -v /tmp/:/packages -v /var/ossec:/var/ossec \
+            --entrypoint '/bin/sh' $CONTAINER_NAME:${{ env.TAG }} -c "tail -f /dev/null")
+          
+          sudo docker exec $CONTAINER_ID /tests/install_component.sh $PACKAGE_NAME manager
 
           # Check if Wazuh was installed. The /tmp/status.log file was generated in the previous step.
           if grep -iq " installed.*wazuh-manager" /tmp/status.log ; then
@@ -191,7 +195,8 @@ jobs:
             echo "The installation could not be completed. The package will not be uploaded.";
             exit 1;
           fi
-
+          
+          echo "CONTAINER_ID=$CONTAINER_ID" >> $GITHUB_ENV
           echo "WAZUH_UID=$(cat $TESTS_PATH/wazuh_uid)" | tee -a $GITHUB_ENV
           echo "WAZUH_GID=$(cat $TESTS_PATH/wazuh_gid)" | tee -a $GITHUB_ENV
 
