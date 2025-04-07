@@ -195,6 +195,35 @@ jobs:
           echo "WAZUH_UID=$(cat $TESTS_PATH/wazuh_uid)" | tee -a $GITHUB_ENV
           echo "WAZUH_GID=$(cat $TESTS_PATH/wazuh_gid)" | tee -a $GITHUB_ENV
 
+      - name: Check installed files
+        uses: ./.github/actions/check_files
+        with:
+          expected_files: manager_base.csv
+          wazuh_uid: ${{ env.WAZUH_UID }}
+          wazuh_gid: ${{ env.WAZUH_GID }}
+          size_check: "false"
+          ignore: "site-packages,/var/ossec/framework/python"
+
+      - name: Test uninstall built manager
+        run: |
+          if [ -z "${{ env.PACKAGE_NAME }}" ] || [ -z "${{ env.CONTAINER_ID }}" ]; then 
+            echo "No package or container found!";
+            exit 1;
+          fi
+
+          sudo docker exec $CONTAINER_ID chmod +x /tests/uninstall_component.sh
+          sudo docker exec $CONTAINER_ID /tests/uninstall_component.sh $PACKAGE_NAME manager
+
+          if grep -iq "Removing wazuh-manager" /tmp/status.log ; then
+            echo "Uninstallation successfully."
+          else
+            echo "The uninstallation could not be completed.";
+            sudo docker stop $CONTAINER_ID && sudo docker rm $CONTAINER_ID
+            exit 1;
+          fi
+
+          sudo docker stop $CONTAINER_ID && sudo docker rm $CONTAINER_ID
+
       - name: Upload package to GitHub
         if: always()
         uses: actions/upload-artifact@v4
@@ -211,15 +240,6 @@ jobs:
           path: /tmp/${{ env.PACKAGE_SYMBOLS_NAME }}
           if-no-files-found: error
 
-      - name: Check installed files
-        uses: ./.github/actions/check_files
-        with:
-          expected_files: manager_base.csv
-          wazuh_uid: ${{ env.WAZUH_UID }}
-          wazuh_gid: ${{ env.WAZUH_GID }}
-          size_check: "false"
-          ignore: "site-packages,/var/ossec/framework/python"
-
       - name: Set up AWS CLI
         if: ${{ env.SHOULD_UPLOAD == 'true' }}
         uses: aws-actions/configure-aws-credentials@v4
@@ -228,32 +248,32 @@ jobs:
           aws-secret-access-key: ${{ secrets.CI_INTERNAL_DEVELOPMENT_BUCKET_USER_SECRET_KEY }}
           aws-region: ${{ secrets.CI_AWS_REGION }}
 
-      - name: Upload package to S3
-        if: ${{ env.SHOULD_UPLOAD == 'true' }}
-        working-directory: packages
-        run: |
-          aws s3 cp /tmp/${{ env.PACKAGE_NAME }} s3://packages-dev.internal.wazuh.com/development/wazuh/4.x/main/packages/
-          s3uri="s3://packages-dev.internal.wazuh.com/development/wazuh/4.x/main/packages/${{ env.PACKAGE_NAME }}"
-          echo "S3 URI: ${s3uri}"
+      # - name: Upload package to S3
+      #   if: ${{ env.SHOULD_UPLOAD == 'true' }}
+      #   working-directory: packages
+      #   run: |
+      #     aws s3 cp /tmp/${{ env.PACKAGE_NAME }} s3://packages-dev.internal.wazuh.com/development/wazuh/4.x/main/packages/
+      #     s3uri="s3://packages-dev.internal.wazuh.com/development/wazuh/4.x/main/packages/${{ env.PACKAGE_NAME }}"
+      #     echo "S3 URI: ${s3uri}"
 
-      - name: Upload checksum to S3
-        if: ${{ env.SHOULD_UPLOAD_CHECKSUM == 'true' }}
-        run: |
-          aws s3 cp /tmp/${{ env.PACKAGE_NAME }}.sha512 s3://packages-dev.internal.wazuh.com/development/wazuh/4.x/main/packages/
-          aws s3 cp /tmp/${{ env.PACKAGE_SYMBOLS_NAME }}.sha512 s3://packages-dev.internal.wazuh.com/development/wazuh/4.x/main/packages/
-          s3uri="s3://packages-dev.internal.wazuh.com/development/wazuh/4.x/main/packages/${{ env.PACKAGE_NAME }}.sha512"
-          echo "S3 sha512 URI: ${s3uri}"
+      # - name: Upload checksum to S3
+      #   if: ${{ env.SHOULD_UPLOAD_CHECKSUM == 'true' }}
+      #   run: |
+      #     aws s3 cp /tmp/${{ env.PACKAGE_NAME }}.sha512 s3://packages-dev.internal.wazuh.com/development/wazuh/4.x/main/packages/
+      #     aws s3 cp /tmp/${{ env.PACKAGE_SYMBOLS_NAME }}.sha512 s3://packages-dev.internal.wazuh.com/development/wazuh/4.x/main/packages/
+      #     s3uri="s3://packages-dev.internal.wazuh.com/development/wazuh/4.x/main/packages/${{ env.PACKAGE_NAME }}.sha512"
+      #     echo "S3 sha512 URI: ${s3uri}"
 
-      - name: Upload debug symbols to S3
-        if: ${{ env.SHOULD_UPLOAD == 'true' }}
-        run: |
-          aws s3 cp /tmp/${{ env.PACKAGE_SYMBOLS_NAME }} s3://packages-dev.internal.wazuh.com/development/wazuh/4.x/main/packages/
-          symbols="s3://packages-dev.internal.wazuh.com/development/wazuh/4.x/main/packages/${{ env.PACKAGE_SYMBOLS_NAME }}"
-          echo "S3 symbols URI: ${symbols}"
+      # - name: Upload debug symbols to S3
+      #   if: ${{ env.SHOULD_UPLOAD == 'true' }}
+      #   run: |
+      #     aws s3 cp /tmp/${{ env.PACKAGE_SYMBOLS_NAME }} s3://packages-dev.internal.wazuh.com/development/wazuh/4.x/main/packages/
+      #     symbols="s3://packages-dev.internal.wazuh.com/development/wazuh/4.x/main/packages/${{ env.PACKAGE_SYMBOLS_NAME }}"
+      #     echo "S3 symbols URI: ${symbols}"
 
-      - name: Upload debug symbols checksum to S3
-        if: ${{ env.SHOULD_UPLOAD_CHECKSUM == 'true' }}
-        run: |
-          aws s3 cp /tmp/${{ env.PACKAGE_SYMBOLS_NAME }}.sha512 s3://packages-dev.internal.wazuh.com/development/wazuh/4.x/main/packages/
-          symbols="s3://packages-dev.internal.wazuh.com/development/wazuh/4.x/main/packages/${{ env.PACKAGE_SYMBOLS_NAME }}.sha512"
-          echo "S3 symbols sha512 URI: ${symbols}"
+      # - name: Upload debug symbols checksum to S3
+      #   if: ${{ env.SHOULD_UPLOAD_CHECKSUM == 'true' }}
+      #   run: |
+      #     aws s3 cp /tmp/${{ env.PACKAGE_SYMBOLS_NAME }}.sha512 s3://packages-dev.internal.wazuh.com/development/wazuh/4.x/main/packages/
+      #     symbols="s3://packages-dev.internal.wazuh.com/development/wazuh/4.x/main/packages/${{ env.PACKAGE_SYMBOLS_NAME }}.sha512"
+      #     echo "S3 symbols sha512 URI: ${symbols}"
