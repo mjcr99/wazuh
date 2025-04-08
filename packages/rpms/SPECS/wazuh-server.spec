@@ -40,6 +40,9 @@ ExclusiveOS: linux
 %define _wazuh_user wazuh-server
 %define _wazuh_group wazuh-server
 
+# Disable shebang mangling of python scripts
+%undefine __brp_mangle_shebangs
+
 %description
 Wazuh helps you to gain security visibility into your infrastructure by monitoring
 hosts at an operating system and application level. It provides the following capabilities:
