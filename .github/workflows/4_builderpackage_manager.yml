@@ -282,9 +282,6 @@ jobs:
 
           bash generate_package.sh -a ${{ env.ARCH }} --tag ${{ env.PREVIOUS_VERSION }} --system ${{ inputs.system }} ${{ env.FLAGS }}
 
-          echo "Available packages in /tmp:"
-          find /tmp -name "wazuh-manager*${{ inputs.system }}"
-
           # Start the container with the previous version
           CONTAINER_ID=$(sudo docker run -d -v $TESTS_PATH/:/tests -v /tmp/:/packages -v /var/ossec:/var/ossec \
             --entrypoint '/bin/sh' $CONTAINER_NAME:${{ env.PREVIOUS_VERSION }} -c "tail -f /dev/null")
@@ -293,7 +290,7 @@ jobs:
           echo "Available packages in the container:"
 
           sudo docker exec $CONTAINER_ID ls -l /packages/
-          sudo docker exec $CONTAINER_ID /tests/install_component.sh "wazuh-manager-${{ env.PREVIOUS_VERSION }}.deb" manager
+          sudo docker exec $CONTAINER_ID sh -c '/tests/install_component.sh $(ls /packages/wazuh-manager*${{ env.PREVIOUS_VERSION }}*.* | head -n 1) manager'
 
           if grep -iq " installed.*wazuh-manager" /tmp/status.log ; then
             echo "Previous version installed successfully."
