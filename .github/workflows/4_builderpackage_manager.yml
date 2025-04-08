@@ -103,7 +103,7 @@ jobs:
       SHOULD_UPLOAD_CHECKSUM: ${{ inputs.checksum && inputs.upload_package }}
 
     runs-on: ${{ (inputs.architecture == 'arm64' || inputs.architecture == 'aarch64') && 'wz-linux-arm64' || 'ubuntu-22.04' }}
-    timeout-minutes: 35
+    timeout-minutes: 55
     name: Build ${{ inputs.system }} wazuh-manager on ${{ inputs.architecture }}
 
     steps:
@@ -263,6 +263,11 @@ jobs:
           echo "PREVIOUS_VERSION=$PREVIOUS_VERSION" >> $GITHUB_ENV
           echo "Previous version selected: $PREVIOUS_VERSION"
 
+      - name: Download docker image for previous version
+        run: |
+          echo "TAG=${{ env.PREVIOUS_VERSION }}" >> $GITHUB_ENV
+          bash $GITHUB_WORKSPACE/.github/actions/ghcr-pull-and-push/pull_image_from_ghcr.sh ${{ secrets.GITHUB_TOKEN }} ${{ github.actor}} $CONTAINER_NAME ${{ env.PREVIOUS_VERSION }}
+
       - name: Install previous version of Wazuh manager
         working-directory: packages
         run: |
@@ -314,11 +319,6 @@ jobs:
           fi
 
           sudo docker stop $CONTAINER_ID && sudo docker rm $CONTAINER_ID
-
-      - name: Download docker image for previous version
-        run: |
-          echo "TAG=${{ env.PREVIOUS_VERSION }}" >> $GITHUB_ENV
-          bash $GITHUB_WORKSPACE/.github/actions/ghcr-pull-and-push/pull_image_from_ghcr.sh ${{ secrets.GITHUB_TOKEN }} ${{ github.actor}} $CONTAINER_NAME ${{ env.PREVIOUS_VERSION }}
 
       - name: Upload package to GitHub
         if: always()
