@@ -232,35 +232,53 @@ jobs:
       - name: Get previous version from Git
         run: |
           TAGS=$(git tag --list "v4.[0-9]*.[0-9]*")
+          echo "TAGS:"
+          echo "$TAGS"
+
           BRANCHES=$(git branch -r | grep "origin/4\.[0-9]\+\.[0-9]\+$" | sed 's|origin/||' | sed 's/^[ \t]*//;s/[ \t]*$//')
+          echo "BRANCHES:"
+          echo "$BRANCHES"
 
           CURRENT_VERSION="${TAG}"
           echo "CURRENT_VERSION=$CURRENT_VERSION"
 
           MAJOR_MINOR=$(echo "$CURRENT_VERSION" | grep -oE '[0-9]+\.[0-9]+')
+          echo "MAJOR_MINOR=$MAJOR_MINOR"
+
           PATCH=$(echo "$CURRENT_VERSION" | grep -oE '[0-9]+$')
+          echo "PATCH=$PATCH"
 
           if [[ "$PATCH" == "0" ]]; then
               MAJOR=$(echo "$MAJOR_MINOR" | cut -d'.' -f1)
               MINOR=$(echo "$MAJOR_MINOR" | cut -d'.' -f2)
               PREVIOUS_MAJOR_MINOR="$MAJOR.$((MINOR - 1))"
+              echo "PREVIOUS_MAJOR_MINOR=$PREVIOUS_MAJOR_MINOR"
 
               LATEST_TAG=$(echo "$TAGS" | grep -E "^v${PREVIOUS_MAJOR_MINOR}\.[0-9]+$" | sort -V | tail -1)
+              echo "LATEST_TAG=$LATEST_TAG"
+
               LATEST_BRANCH=$(echo "$BRANCHES" | grep -E "^${PREVIOUS_MAJOR_MINOR}\.[0-9]+$" | sort -V | tail -1)
+              echo "LATEST_BRANCH=$LATEST_BRANCH"
           else
+              echo "Buscando en misma serie $MAJOR_MINOR"
               LATEST_TAG=$(echo "$TAGS" | grep -E "^v${MAJOR_MINOR}\.[0-9]+$" | sort -V | grep -B1 "^v$CURRENT_VERSION$" | head -n1)
+              echo "LATEST_TAG=$LATEST_TAG"
+
               LATEST_BRANCH=$(echo "$BRANCHES" | grep -E "^${MAJOR_MINOR}\.[0-9]+$" | grep -B1 "^$CURRENT_VERSION$" | head -n1)
+              echo "LATEST_BRANCH=$LATEST_BRANCH"
           fi
 
           PREVIOUS_VERSION=$(printf "$LATEST_TAG\n$LATEST_BRANCH" | sort -V | tail -1)
+          echo "PREVIOUS_VERSION=$PREVIOUS_VERSION"
 
           if [[ -z "$PREVIOUS_VERSION" ]]; then
-              echo "Error: No previous version found!"
+              echo "❌ Error: No previous version found!"
               exit 1
           fi
 
           echo "PREVIOUS_VERSION=$PREVIOUS_VERSION" >> $GITHUB_ENV
           echo "Previous version selected: $PREVIOUS_VERSION"
+
 
       - name: Download docker image for previous version
         run: |
