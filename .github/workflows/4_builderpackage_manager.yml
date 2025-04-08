@@ -245,10 +245,10 @@ jobs:
               MINOR=$(echo "$MAJOR_MINOR" | cut -d'.' -f2)
               PREVIOUS_MAJOR_MINOR="$MAJOR.$((MINOR - 1))"
 
-              LATEST_TAG=$(echo "$TAGS" | grep -E "^v${PREVIOUS_MAJOR_MINOR}\.[0-9]+$" | sed 's/^v//' | sort -V | tail -1)
+              LATEST_TAG=$(echo "$TAGS" | grep -E "^v${PREVIOUS_MAJOR_MINOR}\.[0-9]+$" | sort -V | tail -1)
               LATEST_BRANCH=$(echo "$BRANCHES" | grep -E "^${PREVIOUS_MAJOR_MINOR}\.[0-9]+$" | sort -V | tail -1)
           else
-              LATEST_TAG=$(echo "$TAGS" | grep -E "^v${MAJOR_MINOR}\.[0-9]+$" | sed 's/^v//' | grep -B1 "^$CURRENT_VERSION$" | head -n1)
+              LATEST_TAG=$(echo "$TAGS" | grep -E "^v${MAJOR_MINOR}\.[0-9]+$" | sort -V | grep -B1 "^v$CURRENT_VERSION$" | head -n1)
               LATEST_BRANCH=$(echo "$BRANCHES" | grep -E "^${MAJOR_MINOR}\.[0-9]+$" | grep -B1 "^$CURRENT_VERSION$" | head -n1)
           fi
 
