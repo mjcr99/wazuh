@@ -178,6 +178,7 @@ jobs:
             fi
           done
 
+          echo "FLAGS=$FLAGS" >> $GITHUB_ENV
           echo "PACKAGE_NAME=${PACKAGE_NAME}" | tee -a $GITHUB_ENV
           echo "PACKAGE_SYMBOLS_NAME=${PACKAGE_SYMBOLS_NAME}" | tee -a $GITHUB_ENV
 
@@ -274,7 +275,7 @@ jobs:
           TESTS_PATH=$GITHUB_WORKSPACE/.github/actions/test-install-components/
 
           echo "Building previous version package: ${{ env.PREVIOUS_VERSION }}"
-          bash generate_package.sh -a ${{ env.ARCH }} --tag ${{ env.PREVIOUS_VERSION }} --system ${{ inputs.system }} $FLAGS
+          bash generate_package.sh -a ${{ env.ARCH }} --tag ${{ env.PREVIOUS_VERSION }} --system ${{ inputs.system }} ${{ env.FLAGS }}
 
           echo "Available packages in /tmp:"
           find /tmp -name "wazuh-manager*${{ inputs.system }}"
