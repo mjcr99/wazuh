@@ -275,6 +275,11 @@ jobs:
           TESTS_PATH=$GITHUB_WORKSPACE/.github/actions/test-install-components/
 
           echo "Building previous version package: ${{ env.PREVIOUS_VERSION }}"
+
+          echo "Temporarily setting version to ${{ env.PREVIOUS_VERSION }}"
+          sed -i 's/"version": *".*"/"version": "${{ env.PREVIOUS_VERSION }}"/' $GITHUB_WORKSPACE/VERSION.json
+          cat $GITHUB_WORKSPACE/VERSION.json
+
           bash generate_package.sh -a ${{ env.ARCH }} --tag ${{ env.PREVIOUS_VERSION }} --system ${{ inputs.system }} ${{ env.FLAGS }}
 
           echo "Available packages in /tmp:"
@@ -297,6 +302,9 @@ jobs:
             sudo docker stop $CONTAINER_ID && sudo docker rm $CONTAINER_ID
             exit 1
           fi
+
+          echo "Restoring version to ${{ env.TAG }}"
+          sed -i 's/"version": *".*"/"version": "${{ env.TAG }}"/' $GITHUB_WORKSPACE/VERSION.json
           echo "CONTAINER_ID=$CONTAINER_ID" >> $GITHUB_ENV
 
       - name: Test upgrade to latest version
