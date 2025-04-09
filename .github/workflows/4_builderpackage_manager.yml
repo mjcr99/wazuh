@@ -276,10 +276,12 @@ jobs:
 
           echo "Building previous version package: ${{ env.PREVIOUS_VERSION }}"
 
+          cp $GITHUB_WORKSPACE/VERSION.json $GITHUB_WORKSPACE/VERSION.json.bak
           echo "Temporarily setting version to ${{ env.PREVIOUS_VERSION }}"
           sed -i 's/"version": *".*"/"version": "${{ env.PREVIOUS_VERSION }}"/' $GITHUB_WORKSPACE/VERSION.json
           cat $GITHUB_WORKSPACE/VERSION.json
 
+          rm -rf wazuh-local-src
           bash generate_package.sh -a ${{ env.ARCH }} --tag ${{ env.PREVIOUS_VERSION }} --system ${{ inputs.system }} ${{ env.FLAGS }}
 
           # Start the container with the previous version
@@ -300,8 +302,8 @@ jobs:
             exit 1
           fi
 
+          mv $GITHUB_WORKSPACE/VERSION.json.bak $GITHUB_WORKSPACE/VERSION.json
           echo "Restoring version to ${{ env.TAG }}"
-          sed -i 's/"version": *".*"/"version": "${{ env.TAG }}"/' $GITHUB_WORKSPACE/VERSION.json
           echo "CONTAINER_ID=$CONTAINER_ID" >> $GITHUB_ENV
 
       - name: Test upgrade to latest version
