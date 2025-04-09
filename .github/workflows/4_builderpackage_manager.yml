@@ -290,7 +290,7 @@ jobs:
           echo "Available packages in the container:"
 
           sudo docker exec $CONTAINER_ID ls -l /packages/
-          sudo docker exec $CONTAINER_ID sh -c '/tests/install_component.sh $(ls /packages/wazuh-manager*${{ env.PREVIOUS_VERSION }}*.* | head -n 1) manager'
+          sudo docker exec $CONTAINER_ID sh -c "cd /packages && /tests/install_component.sh \$(ls wazuh-manager_*${{ env.PREVIOUS_VERSION }}*.* | head -n 1) manager"
 
           if grep -iq " installed.*wazuh-manager" /tmp/status.log ; then
             echo "Previous version installed successfully."
