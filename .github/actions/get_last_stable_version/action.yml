@@ -12,7 +12,7 @@ inputs:
     required: true
     description: "Version of the tested package"
 
-output:
+outputs:
   latest_stable_version:
     description: "Latest stable version before given testing_version"
     value: ${{ steps.latest-stable-release.outputs.latest-stable-release }}
@@ -24,8 +24,7 @@ runs:
     id: latest-stable-release
     shell: bash
     run: |
-      version=$(
-        .github/actions/get_last_stable_version/get_last_stable_version.py \
+      version=$(.github/actions/get_last_stable_version/get_last_stable_version.py \
           -o "${{ inputs.repo_owner }}" \
           -r "${{ inputs.repo_name }}" \
           -v "${{ inputs.testing_version }}"

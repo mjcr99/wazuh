@@ -1,9 +1,8 @@
+#! /usr/bin/env python3
+# -*- coding: utf-8 -*-
 """Module providing a function to get the last stable version for a given 
 owner, repository and target_version combination.
 """
-
-#! /usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 import argparse
 import requests
