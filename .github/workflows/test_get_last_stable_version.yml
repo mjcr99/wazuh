@@ -14,8 +14,37 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Check ls pre-checkout
+        run: |
+          ls -a ..
+          echo "$GITHUB_WORKSPACE"
+          pwd
+          ls -a
+
       - name: Check out the repository
         uses: actions/checkout@v4
+        with:
+          path: wazuh
+
+      - name: Check ls post-checkout wazuh/wazuh 
+        run: |
+          ls -a ..
+          echo "$GITHUB_WORKSPACE"
+          pwd
+          ls -a
+
+      - name: Check out the repository
+        uses: actions/checkout@v4
+        with:
+          repository: wazuh/wazuh-agent
+          path: wazuh-agent
+
+      - name: Check ls post-checkout wazuh/wazuh-agent 
+        run: |
+          ls -a ..
+          echo "$GITHUB_WORKSPACE"
+          pwd
+          ls -a
 
       - name: Get last stable version
         id: last-stable-version
