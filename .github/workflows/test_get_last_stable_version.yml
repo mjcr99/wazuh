@@ -1,0 +1,59 @@
+name: Tests get_last_stable_version composite action
+
+on:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: |
+          Tested version
+        type: string
+        required: true
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check ls pre-checkout
+        run: |
+          ls -a ..
+          echo "$GITHUB_WORKSPACE"
+          pwd
+          ls -a
+
+      - name: Check out the repository
+        uses: actions/checkout@v4
+        with:
+          path: wazuh
+
+      - name: Check ls post-checkout wazuh/wazuh 
+        run: |
+          ls -a ..
+          echo "$GITHUB_WORKSPACE"
+          pwd
+          ls -a
+
+      - name: Check out the repository
+        uses: actions/checkout@v4
+        with:
+          repository: wazuh/wazuh-agent
+          path: wazuh-agent
+
+      - name: Check ls post-checkout wazuh/wazuh-agent 
+        run: |
+          ls -a ..
+          echo "$GITHUB_WORKSPACE"
+          pwd
+          ls -a
+
+      - name: Get last stable version
+        id: last-stable-version
+        uses: ./.github/actions/get_last_stable_version
+        with:
+            repo_owner: wazuh
+            repo_name: wazuh
+            testing_version: ${{inputs.version}}
+
+      - name: Show result
+        run: |
+            echo "${{ steps.last-stable-version.outputs.latest_stable_version }}"
